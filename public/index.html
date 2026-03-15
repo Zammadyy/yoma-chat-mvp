@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yoma Chat — Random Video Chat</title>
+    <meta name="description" content="Meet random strangers through video chat. Connect with people who share your interests worldwide.">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- AUTH SCREEN                                                -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-aurora">
+            <div class="aurora-blob"></div>
+            <div class="aurora-blob"></div>
+            <div class="aurora-blob"></div>
+        </div>
+
+        <div class="auth-container">
+            <div class="auth-brand">
+                <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+                    <defs>
+                        <linearGradient id="authLogoGrad" x1="0" y1="0" x2="32" y2="32">
+                            <stop offset="0%" stop-color="#a29bfe"/>
+                            <stop offset="100%" stop-color="#6c5ce7"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="32" height="32" rx="8" fill="url(#authLogoGrad)"/>
+                    <path d="M10 12L16 8L22 12V20L16 24L10 20V12Z" stroke="white" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+                    <circle cx="16" cy="16" r="3" fill="white" opacity="0.9"/>
+                </svg>
+                <h1>Yoma Chat</h1>
+                <p>Connect with people who share your interests</p>
+            </div>
+
+            <div class="auth-card" id="authCard">
+                <!-- Tab Switcher -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tabLogin" data-tab="login">Log In</button>
+                    <button class="auth-tab" id="tabSignup" data-tab="signup">Sign Up</button>
+                    <div class="auth-tab-indicator" id="authTabIndicator"></div>
+                </div>
+
+                <!-- Login Form -->
+                <form class="auth-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="loginUsername">Username</label>
+                        <input type="text" id="loginUsername" placeholder="Enter your username" autocomplete="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="auth-btn" id="loginBtn">
+                        <span>Log In</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <div class="auth-error" id="loginError"></div>
+                </form>
+
+                <!-- Signup Form -->
+                <form class="auth-form hidden" id="signupForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="signupUsername">Username</label>
+                            <input type="text" id="signupUsername" placeholder="Choose a username" minlength="3" maxlength="30" autocomplete="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupDisplayName">Display Name</label>
+                            <input type="text" id="signupDisplayName" placeholder="Your display name" maxlength="50" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" placeholder="Min 6 characters" minlength="6" autocomplete="new-password" required>
+                    </div>
+
+                    <!-- Gender Selection -->
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <div class="gender-selector">
+                            <label class="gender-option" id="genderMale">
+                                <input type="radio" name="gender" value="male" required>
+                                <div class="gender-card">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="14" r="5"/><path d="M19 5l-5.4 5.4M19 5h-5M19 5v5"/></svg>
+                                    <span>Male</span>
+                                </div>
+                            </label>
+                            <label class="gender-option" id="genderFemale">
+                                <input type="radio" name="gender" value="female" required>
+                                <div class="gender-card">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8M9 18h6"/></svg>
+                                    <span>Female</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Country Selector -->
+                    <div class="form-group">
+                        <label for="countrySearch">Country</label>
+                        <div class="country-selector" id="countrySelector">
+                            <div class="country-display" id="countryDisplay">
+                                <span class="country-placeholder">Select your country</span>
+                            </div>
+                            <div class="country-dropdown hidden" id="countryDropdown">
+                                <input type="text" class="country-search" id="countrySearch" placeholder="Search countries...">
+                                <div class="country-list" id="countryList"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="selectedCountryCode" required>
+                        <input type="hidden" id="selectedCountryName">
+                        <input type="hidden" id="selectedCountryFlag">
+                    </div>
+
+                    <!-- Interests -->
+                    <div class="form-group">
+                        <label>Interests <span class="label-hint">(select up to 10)</span></label>
+                        <div class="interests-grid" id="interestsGrid"></div>
+                    </div>
+
+                    <button type="submit" class="auth-btn" id="signupBtn">
+                        <span>Create Account</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <div class="auth-error" id="signupError"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- MAIN CHAT APP                                              -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="app hidden" id="chatApp">
+        <!-- ── Video Area ──────────────────────────────────── -->
+        <div class="video-area" id="videoArea">
+            <video id="remoteVideo" autoplay playsinline></video>
+
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <!-- Yoma Logo -->
+                <div class="brand-logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#a29bfe"/>
+                                <stop offset="100%" stop-color="#6c5ce7"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/>
+                        <path d="M10 12L16 8L22 12V20L16 24L10 20V12Z" stroke="white" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+                        <circle cx="16" cy="16" r="3" fill="white" opacity="0.9"/>
+                    </svg>
+                    <span class="brand-text">Yoma</span>
+                </div>
+
+                <div class="top-bar-right">
+                    <!-- Theme Toggle -->
+                    <button class="btn-icon" id="themeToggle" title="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+
+                    <!-- Profile Button -->
+                    <button class="btn-icon" id="profileBtn" title="Your profile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </button>
+
+                    <!-- Online Counter -->
+                    <div class="online-counter" id="onlineCounter">
+                        <span class="online-dot"></span>
+                        <span id="onlineCount">0</span> online
+                    </div>
+                </div>
+            </div>
+
+            <!-- Peer Profile Badge -->
+            <div class="peer-badge hidden" id="peerBadge">
+                <div class="peer-badge-info">
+                    <span class="peer-flag" id="peerFlag"></span>
+                    <span class="peer-name" id="peerName"></span>
+                    <span class="peer-gender-icon" id="peerGenderIcon"></span>
+                </div>
+                <div class="peer-common-interests hidden" id="peerCommonInterests"></div>
+            </div>
+
+            <!-- Local Video PiP -->
+            <div class="local-video-wrapper" id="localVideoWrapper">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <span class="pip-label">You</span>
+            </div>
+
+            <!-- Status Overlay -->
+            <div class="status-overlay" id="statusOverlay">
+                <div class="aurora">
+                    <div class="aurora-blob"></div>
+                    <div class="aurora-blob"></div>
+                    <div class="aurora-blob"></div>
+                </div>
+                <div class="status-content">
+                    <div class="spinner" id="statusSpinner"></div>
+                    <div class="status-icon" id="statusIcon" style="display:none;"></div>
+                    <div class="status-text" id="statusText">Starting camera...</div>
+                    <div class="status-subtext" id="statusSubtext">Please allow camera and microphone access</div>
+                </div>
+            </div>
+
+            <!-- Control Bar -->
+            <div class="control-bar" id="controlBar">
+                <button class="btn btn-media" id="btnMic" title="Toggle microphone (M)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </button>
+                <button class="btn btn-media" id="btnCam" title="Toggle camera">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 7l-7 5 7 5V7z"/>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                </button>
+
+                <div class="control-divider"></div>
+
+                <button class="btn btn-accent" id="btnNext" title="Find next person (Esc)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 4 15 12 5 20 5 4"/>
+                        <line x1="19" y1="5" x2="19" y2="19"/>
+                    </svg>
+                    <span class="btn-label">Next</span>
+                </button>
+                <button class="btn btn-danger" id="btnReport" title="Report this user">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                        <line x1="4" y1="22" x2="4" y2="15"/>
+                    </svg>
+                    <span class="btn-label">Report</span>
+                </button>
+                <button class="btn chat-toggle-mobile" id="btnChatToggle" title="Toggle chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Chat Sidebar ────────────────────────────────── -->
+        <div class="chat-sidebar" id="chatSidebar">
+            <div class="chat-header">
+                <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Chat
+                </h3>
+                <div class="connection-badge searching" id="connectionBadge">
+                    <span class="badge-dot"></span>
+                    <span id="badgeText">Searching</span>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message system">Welcome to Yoma Chat! You'll be matched with a random stranger.</div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                Stranger is typing...
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled>
+                <button class="btn-send" id="btnSend" title="Send message (Enter)" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="shortcut-hints">
+                <span class="shortcut-hint"><kbd>Esc</kbd> Next</span>
+                <span class="shortcut-hint"><kbd>M</kbd> Mute</span>
+                <span class="shortcut-hint"><kbd>Enter</kbd> Send</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Report Modal ────────────────────────────────────── -->
+    <div class="modal-overlay" id="reportModal">
+        <div class="modal">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Report User
+            </h2>
+            <p>Select a reason for reporting this user. They will be disconnected and blocked after your report.</p>
+            <div class="report-reasons" id="reportReasons">
+                <label class="report-reason">
+                    <input type="radio" name="reportReason" value="inappropriate_behavior">
+                    Inappropriate behavior
+                </label>
+                <label class="report-reason">
+                    <input type="radio" name="reportReason" value="nudity">
+                    Nudity / Sexual content
+                </label>
+                <label class="report-reason">
+                    <input type="radio" name="reportReason" value="harassment">
+                    Harassment / Bullying
+                </label>
+                <label class="report-reason">
+                    <input type="radio" name="reportReason" value="hate_speech">
+                    Hate speech
+                </label>
+                <label class="report-reason">
+                    <input type="radio" name="reportReason" value="spam">
+                    Spam / Advertising
+                </label>
+                <label class="report-reason">
+                    <input type="radio" name="reportReason" value="underage">
+                    Appears underage
+                </label>
+                <label class="report-reason">
+                    <input type="radio" name="reportReason" value="other">
+                    Other
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="btnCancelReport">Cancel</button>
+                <button class="btn btn-report-submit" id="btnSubmitReport">Report & Block</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Profile Modal ───────────────────────────────────── -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal profile-modal">
+            <div class="profile-modal-header">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Your Profile
+                </h2>
+                <button class="btn-icon btn-close-modal" id="closeProfileModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="profile-info" id="profileInfo">
+                <div class="profile-avatar" id="profileAvatar"></div>
+                <div class="profile-name" id="profileName"></div>
+                <div class="profile-meta" id="profileMeta"></div>
+                <div class="profile-interests-list" id="profileInterests"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="btnLogout">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Toast Container ─────────────────────────────────── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/countries.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>
