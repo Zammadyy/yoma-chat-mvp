@@ -21,9 +21,16 @@ connectDB().then(success => {
     }
 });
 
-// ── Middleware ────────────────────────────────────────────────────
+// ── Middleware & Static Files ────────────────────────────────────
 app.use(express.json());
-app.use(express.static('public'));
+
+// FIXED: Serve static files using an absolute path
+app.use(express.static(path.join(__dirname, 'public')));
+
+// FIXED: Explicitly serve index.html when users hit the root URL
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const sessionMiddleware = session({
     secret: process.env.SESSION_SECRET || 'yoma-chat-fallback-secret',
@@ -524,11 +531,10 @@ io.on('connection', (socket) => {
     });
 });
 
+// FIXED: Removed the if-statement so the server listens properly on Render/Railway
 const PORT = process.env.PORT || 3000;
-if (process.env.NODE_ENV !== 'production') {
-    server.listen(PORT, () => {
-        console.log(`Yoma Chat server running on http://localhost:${PORT}`);
-    });
-}
+server.listen(PORT, () => {
+    console.log(`Yoma Chat server running on port ${PORT}`);
+});
 
 module.exports = server;
