@@ -525,6 +525,10 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Yoma Chat server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    server.listen(PORT, () => {
+        console.log(`Yoma Chat server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = server;
