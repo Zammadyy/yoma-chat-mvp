@@ -24,10 +24,10 @@ connectDB().then(success => {
 // ── Middleware & Static Files ────────────────────────────────────
 app.use(express.json());
 
-// FIXED: Serve static files using an absolute path
+// Serve static files using an absolute path
 app.use(express.static(path.join(__dirname, 'public')));
 
-// FIXED: Explicitly serve index.html when users hit the root URL
+// Explicitly serve index.html when users hit the root URL
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -531,10 +531,15 @@ io.on('connection', (socket) => {
     });
 });
 
-// FIXED: Removed the if-statement so the server listens properly on Render/Railway
+// ── Server Listen & Export ───────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Yoma Chat server running on port ${PORT}`);
-});
 
-module.exports = server;
+// Only start the server manually if we are NOT on Vercel
+if (!process.env.VERCEL) {
+    server.listen(PORT, () => {
+        console.log(`Yoma Chat server running on port ${PORT}`);
+    });
+}
+
+// Vercel needs the Express app exported, not the HTTP server
+module.exports = app;
