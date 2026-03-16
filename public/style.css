@@ -262,12 +262,13 @@ body {
 /* Auth Card */
 .auth-card {
     width: 100%;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-glass);
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-2xl);
     padding: 28px;
     box-shadow: var(--shadow-card-lg);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 }
 
 /* Auth Tabs */
@@ -771,8 +772,9 @@ body {
     padding: 8px 16px;
     border-radius: var(--radius-lg);
     background: var(--bg-glass);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--border-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -813,12 +815,14 @@ body {
     position: absolute;
     bottom: 100px;
     right: 24px;
-    width: 200px;
-    height: 150px;
+    width: 240px;
+    aspect-ratio: 4 / 3;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    border: 2px solid var(--border-glass);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     z-index: 10;
     transition: border-color var(--transition-base), box-shadow var(--transition-base), width var(--transition-base), height var(--transition-base);
     cursor: grab;
@@ -972,7 +976,10 @@ body {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: linear-gradient(to top, rgba(8, 8, 13, 0.95) 0%, rgba(8, 8, 13, 0.6) 60%, transparent 100%);
+    background: var(--bg-glass);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     z-index: 15;
 }
 
@@ -1728,8 +1735,8 @@ body {
     }
 
     .local-video-wrapper {
-        width: 120px;
-        height: 90px;
+        width: 160px;
+        aspect-ratio: 4 / 3;
         bottom: 80px;
         right: 12px;
     }
@@ -1851,8 +1858,8 @@ body {
     }
 
     .local-video-wrapper {
-        width: 100px;
-        height: 75px;
+        width: 140px;
+        aspect-ratio: 4 / 3;
         bottom: 72px;
         right: 8px;
     }
@@ -1868,5 +1875,21 @@ body {
 
     .interests-grid {
         max-height: 140px;
+    }
+}
+
+@media (min-width: 1920px) {
+    html {
+        font-size: 18px;
+    }
+
+    .local-video-wrapper {
+        width: 320px;
+        bottom: 120px;
+        right: 40px;
+    }
+    
+    .chat-sidebar {
+        width: 480px;
     }
 }

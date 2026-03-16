@@ -8,10 +8,55 @@ const fs = require('fs');
 const path = require('path');
 const connectDB = require('./db');
 const User = require('./models/User');
+const cors = require('cors');
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+
+// ── HTTPS Enforcement Middleware ─────────────────────────────────
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+        return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
+    next();
+});
+
+// ── CORS Configuration ───────────────────────────────────────────
+app.use(cors({ origin: process.env.CLIENT_URL || '*' }));
+
+let server;
+if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+    const forge = require('node-forge');
+    const https = require('https');
+    
+    // Generate self-signed cert for dev
+    const keys = forge.pki.rsa.generateKeyPair(2048);
+    const cert = forge.pki.createCertificate();
+    cert.publicKey = keys.publicKey;
+    cert.serialNumber = '01';
+    cert.validity.notBefore = new Date();
+    cert.validity.notAfter = new Date();
+    cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
+    const attrs = [{ name: 'commonName', value: 'localhost' }];
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
+    cert.sign(keys.privateKey, forge.md.sha256.create());
+    
+    server = https.createServer({
+        key: forge.pki.privateKeyToPem(keys.privateKey),
+        cert: forge.pki.certificateToPem(cert)
+    }, app);
+    
+    // Simple HTTP to HTTPS redirect for dev
+    http.createServer((req, res) => {
+        const targetHost = req.headers.host ? req.headers.host.split(':')[0] : 'localhost';
+        res.writeHead(301, { "Location": "https://" + targetHost + ":" + (process.env.PORT || 3000) + req.url });
+        res.end();
+    }).listen(8080);
+} else {
+    server = http.createServer(app);
+}
+
+const io = new Server(server, { cors: { origin: process.env.CLIENT_URL || '*' } });
 
 // ── Connect to MongoDB ───────────────────────────────────────────
 let isOffline = false;
@@ -55,14 +100,15 @@ io.engine.use(sessionMiddleware);
 // ── Auth REST Endpoints ──────────────────────────────────────────
 app.post('/api/register', async (req, res) => {
     try {
-        const { username, password, displayName, gender, country, interests } = req.body;
+        const { email, password, displayName, gender, country, interests } = req.body;
 
-        if (!username || !password || !displayName || !gender || !country) {
+        if (!email || !password || !displayName || !gender || !country) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
-        if (username.length < 3 || username.length > 30) {
-            return res.status(400).json({ error: 'Username must be 3-30 characters' });
+        const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Valid email is required' });
         }
 
         if (password.length < 6) {
@@ -74,12 +120,12 @@ app.post('/api/register', async (req, res) => {
         }
 
         if (isOffline) {
-            if (mockUsers.has(username.toLowerCase())) {
-                return res.status(409).json({ error: 'Username already taken' });
+            if (mockUsers.has(email.toLowerCase())) {
+                return res.status(409).json({ error: 'Email already registered' });
             }
             const user = {
                 id: `mock-${mockUserIdCounter++}`,
-                username: username.toLowerCase(),
+                email: email.toLowerCase(),
                 password, // Store plain for mock simple
                 displayName,
                 gender,
@@ -87,18 +133,18 @@ app.post('/api/register', async (req, res) => {
                 interests: interests || [],
                 createdAt: new Date()
             };
-            mockUsers.set(user.username, user);
+            mockUsers.set(user.email, user);
             req.session.userId = user.id;
             return res.status(201).json({ user: toPublicJSON(user) });
         }
 
-        const existingUser = await User.findOne({ username: username.toLowerCase() });
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
-            return res.status(409).json({ error: 'Username already taken' });
+            return res.status(409).json({ error: 'Email already registered' });
         }
 
         const user = new User({
-            username: username.toLowerCase(),
+            email: email.toLowerCase(),
             password,
             displayName,
             gender,
@@ -118,29 +164,29 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!username || !password) {
-            return res.status(400).json({ error: 'Username and password are required' });
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
         }
 
         if (isOffline) {
-            const user = mockUsers.get(username.toLowerCase());
+            const user = mockUsers.get(email.toLowerCase());
             if (!user || user.password !== password) {
-                return res.status(401).json({ error: 'Invalid username or password' });
+                return res.status(401).json({ error: 'Invalid email or password' });
             }
             req.session.userId = user.id;
             return res.json({ user: toPublicJSON(user) });
         }
 
-        const user = await User.findOne({ username: username.toLowerCase() });
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
-            return res.status(401).json({ error: 'Invalid username or password' });
+            return res.status(401).json({ error: 'Invalid email or password' });
         }
 
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid username or password' });
+            return res.status(401).json({ error: 'Invalid email or password' });
         }
 
         req.session.userId = user._id;
@@ -208,6 +254,17 @@ app.put('/api/profile', async (req, res) => {
     }
 });
 
+app.get('/api/turn', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+    res.json({
+        url: process.env.TURN_URL || '',
+        username: process.env.TURN_USERNAME || '',
+        credential: process.env.TURN_CREDENTIAL || ''
+    });
+});
+
 // ── State Management ─────────────────────────────────────────────
 const waitingQueue = [];  // Array of { socket, profile, joinedAt }
 const socketToRoom = new Map();
@@ -216,13 +273,13 @@ const blockList = new Map();
 const socketToProfile = new Map(); // socketId → userProfile
 
 // ── Mock Store for Offline Mode ──────────────────────────────────
-const mockUsers = new Map(); // username → userObject
+const mockUsers = new Map(); // email → userObject
 let mockUserIdCounter = 1;
 
 function toPublicJSON(user) {
     return {
         id: user._id || user.id,
-        username: user.username,
+        email: user.email,
         displayName: user.displayName,
         gender: user.gender,
         country: user.country,
@@ -537,7 +594,8 @@ const PORT = process.env.PORT || 3000;
 // Only start the server manually if we are NOT on Vercel
 if (!process.env.VERCEL) {
     server.listen(PORT, () => {
-        console.log(`Yoma Chat server running on port ${PORT}`);
+        const protocol = (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) ? 'https' : 'http';
+        console.log(`Yoma Chat server running on ${protocol}://localhost:${PORT}`);
     });
 }
 

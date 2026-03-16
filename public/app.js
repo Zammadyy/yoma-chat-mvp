@@ -204,7 +204,7 @@ renderCountryList();
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.textContent = '';
-    const username = document.getElementById('loginUsername').value.trim();
+    const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
     const btn = document.getElementById('loginBtn');
@@ -215,7 +215,7 @@ loginForm.addEventListener('submit', async (e) => {
         const res = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ email, password })
         });
         const data = await res.json();
         if (!res.ok) {
@@ -237,7 +237,7 @@ signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     signupError.textContent = '';
 
-    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
     const displayName = document.getElementById('signupDisplayName').value.trim();
     const password = document.getElementById('signupPassword').value;
     const gender = document.querySelector('input[name="gender"]:checked')?.value;
@@ -260,7 +260,7 @@ signupForm.addEventListener('submit', async (e) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username,
+                email,
                 password,
                 displayName,
                 gender,
@@ -301,9 +301,10 @@ async function checkAuth() {
     }
 }
 
-function enterChat() {
+async function enterChat() {
     authScreen.classList.add('hidden');
     chatApp.classList.remove('hidden');
+    await fetchTurnCredentials();
     initSocket();
     startMedia();
 }
@@ -569,33 +570,37 @@ function hidePeerProfile() {
 // ══════════════════════════════════════════════════════════════════
 // ICE CONFIGURATION
 // ══════════════════════════════════════════════════════════════════
-const iceConfig = {
+let iceConfig = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun.relay.metered.ca:80' },
-        {
-            urls: 'turn:global.relay.metered.ca:80',
-            username: 'e7e3e70789668be1dea3891e',
-            credential: '5qmXIuNp+nKXA0GS'
-        },
-        {
-            urls: 'turn:global.relay.metered.ca:80?transport=tcp',
-            username: 'e7e3e70789668be1dea3891e',
-            credential: '5qmXIuNp+nKXA0GS'
-        },
-        {
-            urls: 'turn:global.relay.metered.ca:443',
-            username: 'e7e3e70789668be1dea3891e',
-            credential: '5qmXIuNp+nKXA0GS'
-        },
-        {
-            urls: 'turns:global.relay.metered.ca:443?transport=tcp',
-            username: 'e7e3e70789668be1dea3891e',
-            credential: '5qmXIuNp+nKXA0GS'
-        }
+        { urls: 'stun:stun1.l.google.com:19302' }
     ]
 };
+
+async function fetchTurnCredentials() {
+    try {
+        const res = await fetch('/api/turn');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.url && data.username && data.credential) {
+                iceConfig.iceServers.push({
+                    urls: data.url,
+                    username: data.username,
+                    credential: data.credential
+                });
+                if (data.url.startsWith('turn:')) {
+                    iceConfig.iceServers.push({
+                        urls: data.url.replace('turn:', 'turns:'),
+                        username: data.username,
+                        credential: data.credential
+                    });
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Failed to fetch TURN credentials', e);
+    }
+}
 
 // ══════════════════════════════════════════════════════════════════
 // SOUND EFFECTS
